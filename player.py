@@ -45,6 +45,7 @@ class Player:
         if destination_cell.level > current_cell.level + 1:
             return False
         return True
+    
     def is_valid_build(self, board, row, col):
         if row < 0 or row >= board.size or col < 0 or col >= board.size:
             return False
