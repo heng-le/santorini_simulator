@@ -1,5 +1,8 @@
 from cell import Cell
 from board import Board 
+from game import GameManager
+from player import Player 
+import pytest 
 
 def test_initial_level():
     cell = Cell(0, 0)
@@ -30,7 +33,65 @@ def test_board_initialization():
         for col in range(board_size):
             cell = board.get_cell(row, col)
             assert isinstance(cell, Cell), "Board should be initialized with Cell objects"
-            assert cell.row == row, f"Cell at ({row}, {col}) should have row {row}"
-            assert cell.col == col, f"Cell at ({row}, {col}) should have column {col}"
+            assert cell._row == row, f"Cell at ({row}, {col}) should have row {row}"
+            assert cell._col == col, f"Cell at ({row}, {col}) should have column {col}"
             assert cell.level == 0, f"Cell at ({row}, {col}) should have level 0"
             assert cell.occupant is None, f"Cell at ({row}, {col}) should have no occupant"
+
+
+# testing the win condition 
+def test_winning():
+    board = Board()  
+    player1 = Player("white", ["A", "B"])
+    player2 = Player("blue", ["Y", "Z"])
+    players = [player1, player2]
+
+    player1.place_worker(board, "A", 1, 3)
+    player1.place_worker(board, "B", 3, 1)
+    player2.place_worker(board, "Y", 1, 1)
+    player2.place_worker(board, "Z", 3, 3)
+
+    board.get_cell(1,3).build_level()
+    board.get_cell(1,3).build_level()
+
+    board.get_cell(1,4).build_level()
+    board.get_cell(1,4).build_level()
+    board.get_cell(1,4).build_level()
+
+
+    game = GameManager(board, players)
+    player1.move_worker(board,'A','e')
+    assert game.check_win_condition(), "The game should be won after this move"
+
+
+# board = Board()  
+# player1 = Player("white", ["A", "B"])
+# player2 = Player("blue", ["Y", "Z"])
+# players = [player1, player2]
+
+# player1.place_worker(board, "A", 1, 3)
+# player1.place_worker(board, "B", 3, 1)
+# player2.place_worker(board, "Y", 1, 1)
+# player2.place_worker(board, "Z", 3, 3)
+
+# board.get_cell(1,3).build_level()
+# board.get_cell(1,3).build_level()
+
+# board.get_cell(1,4).build_level()
+# board.get_cell(1,4).build_level()
+# board.get_cell(1,4).build_level()
+# game = GameManager(board, players)
+# game.play()
+
+board = Board()  
+player1 = Player("white", ["A", "B"])
+player2 = Player("blue", ["Y", "Z"])
+players = [player1, player2]
+
+player1.place_worker(board, "A", 0, 0)
+player1.place_worker(board, "B", 0, 1)
+player2.place_worker(board, "Y", 1, 1)
+player2.place_worker(board, "Z", 1, 0)
+
+game = GameManager(board, players)
+game.play()

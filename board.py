@@ -19,5 +19,8 @@ class Board():
             print('|' + '|'.join(f'{str(cell.level) + cell.occupant if cell.occupant else cell.level:<2}' for cell in row) + '|')
         print('+--' * self.size + '+')
 
+    def reset_game(self):
+        self._board = [[Cell(row, col) for col in range(self.size)] for row in range(self.size)]
+
 
 

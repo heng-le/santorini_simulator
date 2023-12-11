@@ -7,13 +7,14 @@ class GameManager:
         self._board = board
         self._players = players
         self._current_player_index = 0
-        self._turn_count = 0
+        self._turn_count = 1
 
     def next_turn(self):
         self._current_player_index = (self._current_player_index + 1) % len(self._players)
 
     def play(self):
-        while not self.is_game_over():
+        game_over = False
+        while not game_over:
             current_player = self._players[self._current_player_index]
             self._board.render()
             print(f"Turn: {self._turn_count}, {current_player.name} ({''.join([workers for workers in current_player.get_workers()])})")
@@ -44,21 +45,39 @@ class GameManager:
 
             print(f"{worker_symbol},{move_direction},{build_direction}")
 
+            
             self._turn_count += 1
             self.next_turn()
 
+            if self.check_win_condition() or self.check_no_valid_moves(current_player):
+                self.ask_to_play_again()
+                game_over = True
+
+        
+    def ask_to_play_again(self):
+        play_again = input("Play again?\n")
+        if play_again.lower() == 'yes':
+            self._board.reset_game()
+            self.preset_board()
+            self._turn_count = 1
+            self._current_player_index = 0
+            self.play()
+        else:
+            exit()
 
     def get_worker_input(self, current_player):
-        valid = False
-        while not valid:
+        while True:
             worker_symbol = input("Select a worker to move: ")
+
             if worker_symbol in current_player.get_workers():
-                valid = True
+                if self.can_worker_move_or_build(current_player, worker_symbol):
+                    return worker_symbol
+                else:
+                    print("That worker cannot move")
             elif any(worker_symbol in other_player.get_workers() for other_player in self._players if other_player != current_player):
                 print("That is not your worker")
             else:
                 print("Not a valid worker")
-        return worker_symbol
 
     def get_direction_input(self, action_type):
         valid_directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
@@ -70,15 +89,6 @@ class GameManager:
             else:
                 print("Not a valid direction")
         return direction
-
-    def is_game_over(self):
-        if self.check_win_condition():
-            return True
-
-        if self.check_no_valid_moves(self._players[self._current_player_index]):
-            return True
-
-        return False
 
     def check_win_condition(self):
         for row in range(self._board.size):
@@ -108,6 +118,12 @@ class GameManager:
             if player.is_valid_build(self._board, new_row, new_col): 
                 return True
         return False
+    
+    def preset_board(self):
+        self._players[0].place_worker(self._board, "A", 1, 3)
+        self._players[0].place_worker(self._board, "B", 3, 1)
+        self._players[1].place_worker(self._board, "Y", 1, 1)
+        self._players[1].place_worker(self._board, "Z", 3, 3)
 
 
 
