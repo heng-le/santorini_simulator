@@ -34,12 +34,13 @@ class GameManager:
             current_row, current_col = current_player.get_workers()[worker_symbol]
             new_row, new_col = DirectionAdapter.to_new_position(current_row, current_col, move_direction)
             current_player.move_worker(self.board, worker_symbol, move_direction)
-
+            height_score, center_score, distance_score = current_player.get_score(self)
             # Handle build
             build_direction = current_player.make_build(self, new_row, new_col)
             current_player.build(self.board, worker_symbol, build_direction)
 
-            print(f"{worker_symbol},{move_direction},{build_direction}")
+            
+            print(f"{worker_symbol},{move_direction},{build_direction} ({height_score}, {center_score}, {distance_score})")
 
             self.turn_count += 1
             self.next_turn()

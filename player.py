@@ -66,14 +66,7 @@ class Player:
     
     def make_build(self, game_manager, new_row, new_col):
         return self._strategy.choose_build(game_manager, self, new_row, new_col)
-
-
-class ComputerPlayer(Player):
-    def __init__(self, strategy: MoveStrategy):
-        self.strategy = strategy
-
-    def make_move(self, game_state):
-        move = self.strategy.choose_move(game_state)
-        print(f"Computer chose move: {move}")
-        # Execute the move
+    
+    def get_score(self, game_manager):
+        return self._strategy.score_move(game_manager, self)
 
