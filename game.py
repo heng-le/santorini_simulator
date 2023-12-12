@@ -22,16 +22,21 @@ class GameManager:
             current_player = self.players[self.current_player_index]
             self.board.render()
             height_score, center_score, distance_score = current_player.get_score(self)
-            print(f"Turn: {self.turn_count}, {current_player.name} ({''.join([workers for workers in current_player.get_workers()])}), ({height_score}, {center_score}, {distance_score})")
+            if self._score == 'on':
+                print(f"Turn: {self.turn_count}, {current_player.name} ({''.join([workers for workers in current_player.get_workers()])}), ({height_score}, {center_score}, {distance_score})")
+            else:
+                print(f"Turn: {self.turn_count}, {current_player.name} ({''.join([workers for workers in current_player.get_workers()])})")
+
+            
 
             winner = self.check_win_condition()
             if not winner:
                 winner = self.check_no_valid_moves(current_player)
 
                 if self._undo == 'on':
-                    user_choice = input("Choose action: undo, redo, or next:\n").strip().lower()
+                    user_choice = input("undo, redo, or next\n").strip().lower()
                     while user_choice not in ['undo','next','redo']:
-                        user_choice = input("Choose action: undo, redo, or next:\n").strip().lower()
+                        user_choice = input("undo, redo, or next\n").strip().lower()
                     if user_choice == "undo":
                         self.undo_move()
                         continue  
@@ -110,7 +115,6 @@ class GameManager:
     def restore_state(self, memento):
         self.board, self.turn_count, self.current_player_index = memento.get_state()
 
-    # Undo/redo functionality
     def undo_move(self):
         memento = self.history_manager.undo()
         if memento:

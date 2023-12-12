@@ -104,7 +104,7 @@ class HumanMoveStrategy(MoveStrategy):
 
     def get_worker_input(self, current_player, game_manager):
         while True:
-            worker_symbol = input("Select a worker to move:\n")
+            worker_symbol = input("Select a worker to move\n")
 
             if worker_symbol in current_player.get_workers():
                 if game_manager.can_worker_move(current_player, worker_symbol):
@@ -120,7 +120,7 @@ class HumanMoveStrategy(MoveStrategy):
         valid_directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
         valid = False
         while not valid:
-            direction = input(f"Select a direction to {action_type} (n, ne, e, se, s, sw, w, nw):\n")
+            direction = input(f"Select a direction to {action_type} (n, ne, e, se, s, sw, w, nw)\n")
             if direction in valid_directions:
                 valid = True
             else:
