@@ -49,7 +49,7 @@ class HumanMoveStrategy(MoveStrategy):
             worker_symbol = input("Select a worker to move: ")
 
             if worker_symbol in current_player.get_workers():
-                if game_manager.can_worker_move_or_build(current_player, worker_symbol):
+                if game_manager.can_worker_move(current_player, worker_symbol):
                     return worker_symbol
                 else:
                     print("That worker cannot move")
