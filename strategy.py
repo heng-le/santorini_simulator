@@ -11,9 +11,6 @@ class MoveStrategy:
     def choose_build(self, game_manager, current_player, new_row, new_col):
         raise NotImplementedError("This method should be implemented by subclasses.")
     
-    def score_move(self, game_manager, player, worker_symbol, move_direction):
-        pass
-
     def calculate_distance_score(self, game_manager, player, current_row, current_col):
 
         total_min_distance = 0
@@ -107,7 +104,7 @@ class HumanMoveStrategy(MoveStrategy):
 
     def get_worker_input(self, current_player, game_manager):
         while True:
-            worker_symbol = input("Select a worker to move: ")
+            worker_symbol = input("Select a worker to move:\n")
 
             if worker_symbol in current_player.get_workers():
                 if game_manager.can_worker_move(current_player, worker_symbol):
@@ -123,7 +120,7 @@ class HumanMoveStrategy(MoveStrategy):
         valid_directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
         valid = False
         while not valid:
-            direction = input(f"Select a direction to {action_type} (n, ne, e, se, s, sw, w, nw): ")
+            direction = input(f"Select a direction to {action_type} (n, ne, e, se, s, sw, w, nw):\n")
             if direction in valid_directions:
                 valid = True
             else:
@@ -183,23 +180,38 @@ class RandomMoveStrategy(MoveStrategy):
 
 class HeuristicMoveStrategy(MoveStrategy):
     def choose_move(self, game_manager, current_player):
-        worker_symbol = self.get_worker_input(current_player, game_manager)
-        current_row, current_col = current_player.get_workers()[worker_symbol]
-        move_direction = self.get_valid_move_direction(current_player, game_manager, current_row, current_col)
-        return worker_symbol, move_direction
+        best_score = -float('inf')
+        best_move = None
+        valid_directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
+
+        for worker_symbol in current_player.get_workers().keys():
+            current_row, current_col = current_player.get_workers()[worker_symbol]
+
+            for move_direction in valid_directions:
+                new_row, new_col = DirectionAdapter.to_new_position(current_row, current_col, move_direction)
+
+                if current_player.is_valid_move(game_manager.board, current_row, current_col, new_row, new_col):
+                    current_player.get_workers()[worker_symbol] = (new_row, new_col)
+                    height_score, center_score, adjusted_distance_score = self.score_move(game_manager, current_player)
+
+                    if game_manager.board.get_cell(new_row, new_col).level == 3:
+                        score = 100000
+                    else:
+                        score = height_score + center_score + adjusted_distance_score
+
+                    current_player.get_workers()[worker_symbol] = (current_row, current_col)
+
+                    if score > best_score:
+                        best_score = score
+                        best_move = (worker_symbol, move_direction)
+
+        return best_move if best_move else (None, None)
+
 
     def choose_build(self, game_manager, current_player, new_row, new_col):
         build_direction = self.get_valid_build_direction(current_player, game_manager, new_row, new_col)
         return build_direction
-
-    def get_valid_move_direction(self, current_player, game_manager, current_row, current_col):
-        while True:
-            move_direction = self.get_direction_input("move")
-            new_row, new_col = DirectionAdapter.to_new_position(current_row, current_col, move_direction)
-
-            if current_player.is_valid_move(game_manager.board, current_row, current_col, new_row, new_col):
-                return move_direction
-
+    
     def get_valid_build_direction(self, current_player, game_manager, new_row, new_col):
         while True:
             build_direction = self.get_direction_input("build")
@@ -207,7 +219,6 @@ class HeuristicMoveStrategy(MoveStrategy):
 
             if current_player.is_valid_build(game_manager.board, build_row, build_col):
                 return build_direction
-            
 
     def get_worker_input(self, current_player, game_manager):
         worker_symbols = list(current_player.get_workers().keys())
@@ -229,3 +240,4 @@ class HeuristicMoveStrategy(MoveStrategy):
             else:
                 print("Not a valid direction")
         return direction
+    
