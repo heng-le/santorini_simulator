@@ -1,9 +1,13 @@
 from adapter import DirectionAdapter
-
+from strategy import MoveStrategy
 class Player:
-    def __init__(self, name, worker_symbols):
+    def __init__(self, name, worker_symbols, strategy):
         self.name = name
         self._workers = {symbol: None for symbol in worker_symbols}  
+        self._strategy = strategy
+    
+    def player_strategy(self):
+        return self._strategy
 
     def place_worker(self, board, worker_symbol, row, col):
         if worker_symbol in self._workers and board.get_cell(row, col).occupant is None:
@@ -54,5 +58,20 @@ class Player:
         if board.get_cell(row, col).level >= 4:
             return False
         return True
+    
+    def make_move(self, game_manager):
+        return self._strategy.choose_move(game_manager, self)
+    
+    def make_build(self, game_manager, new_row, new_col):
+        return self._strategy.choose_build(game_manager, self, new_row, new_col)
 
+
+class ComputerPlayer(Player):
+    def __init__(self, strategy: MoveStrategy):
+        self.strategy = strategy
+
+    def make_move(self, game_state):
+        move = self.strategy.choose_move(game_state)
+        print(f"Computer chose move: {move}")
+        # Execute the move
 
