@@ -19,6 +19,16 @@ class GameManager:
             self.board.render()
 
             print(f"Turn: {self.turn_count}, {current_player.name} ({''.join([workers for workers in current_player.get_workers()])})")
+
+            winner = self.check_win_condition()
+            if not winner:
+                winner = self.check_no_valid_moves(current_player)
+
+            if winner:
+                print(f"{winner} has won")
+                game_over = True
+                break 
+
             # Handle move
             worker_symbol, move_direction = current_player.make_move(self)
             current_row, current_col = current_player.get_workers()[worker_symbol]
@@ -34,22 +44,6 @@ class GameManager:
             self.turn_count += 1
             self.next_turn()
 
-            if self.check_win_condition() or self.check_no_valid_moves(current_player):
-                self.ask_to_play_again()
-                game_over = True
-
-        
-    def ask_to_play_again(self):
-        play_again = input("Play again?\n")
-        if play_again.lower() == 'yes':
-            self.board.reset_game()
-            self.preset_board()
-            self.turn_count = 1
-            self.current_player_index = 0
-            self.play()
-        else:
-            exit()
-
 
 
     def check_win_condition(self):
@@ -59,27 +53,29 @@ class GameManager:
                 if cell.level == 3 and cell.occupant is not None:
                     for player in self.players:
                         if cell.occupant in player.get_workers():
-                            print(f"{player.name} has won")
-                            return True
-        return False
+                            return player.name 
+        return None 
+    
 
     def check_no_valid_moves(self, player):
         for worker_symbol in player.get_workers().keys():
-            if self.can_worker_move_or_build(player, worker_symbol):
-                return False
-        print(f"{player.name} cannot move or build, they lose")
-        return True
+            if self.can_worker_move(player, worker_symbol):
+                return None  
+        for opponent in self.players:
+            if opponent != player:
+                return opponent.name
+
     
-    def can_worker_move_or_build(self, player, worker_symbol):
+    def can_worker_move(self, player, worker_symbol):
         current_row, current_col = player.get_workers()[worker_symbol]
         directions = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
         for direction in directions:
             new_row, new_col = DirectionAdapter.to_new_position(current_row, current_col, direction)
             if player.is_valid_move(self.board, current_row, current_col, new_row, new_col):
                 return True
-            if player.is_valid_build(self.board, new_row, new_col): 
-                return True
         return False
+    
+
     
     def preset_board(self):
         self.players[0].place_worker(self.board, "A", 1, 3)

@@ -48,6 +48,8 @@ class Player:
         destination_cell = board.get_cell(new_row, new_col)
         if destination_cell.level > current_cell.level + 1:
             return False
+        if destination_cell.level >= 4:
+            return False
         return True
     
     def is_valid_build(self, board, row, col):
