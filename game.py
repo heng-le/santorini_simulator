@@ -18,7 +18,6 @@ class GameManager:
     def play(self):
         game_over = False
         while not game_over:
-            self.save_state()
             current_player = self.players[self.current_player_index]
             self.board.render()
             height_score, center_score, distance_score = current_player.get_score(self)
@@ -27,46 +26,52 @@ class GameManager:
             else:
                 print(f"Turn: {self.turn_count}, {current_player.name} ({''.join([workers for workers in current_player.get_workers()])})")
 
-            
-
             winner = self.check_win_condition()
             if not winner:
                 winner = self.check_no_valid_moves(current_player)
 
-                if self._undo == 'on':
+            perform_turn = True  
+
+            if self._undo == 'on' and not winner:
+                user_choice = input("undo, redo, or next\n").strip().lower()
+                while user_choice not in ['undo', 'next', 'redo']:
                     user_choice = input("undo, redo, or next\n").strip().lower()
-                    while user_choice not in ['undo','next','redo']:
-                        user_choice = input("undo, redo, or next\n").strip().lower()
-                    if user_choice == "undo":
-                        self.undo_move()
-                        continue  
-                    elif user_choice == "redo":
-                        self.redo_move()
-                        continue  
+   
+                if user_choice == "undo":
+                    self.undo_move()
+                    perform_turn = False
+                elif user_choice == "redo":
+                    self.redo_move()
+                    perform_turn = False
+
+     
+            if not perform_turn:
+                continue  
 
             if winner:
                 print(f"{winner} has won")
                 game_over = True
                 break
 
-            # Handle move
-            worker_symbol, move_direction = current_player.make_move(self)
-            current_row, current_col = current_player.get_workers()[worker_symbol]
-            new_row, new_col = DirectionAdapter.to_new_position(current_row, current_col, move_direction)
-            current_player.move_worker(self.board, worker_symbol, move_direction)
-            height_score, center_score, distance_score = current_player.get_score(self)
-            # Handle build
-            build_direction = current_player.make_build(self, new_row, new_col)
-            current_player.build(self.board, worker_symbol, build_direction)
+            if perform_turn:
+                # Handle move
+                self.save_state()
+                worker_symbol, move_direction = current_player.make_move(self)
+                current_row, current_col = current_player.get_workers()[worker_symbol]
+                new_row, new_col = DirectionAdapter.to_new_position(current_row, current_col, move_direction)
+                current_player.move_worker(self.board, worker_symbol, move_direction)
+                height_score, center_score, distance_score = current_player.get_score(self)
+                # Handle build
+                build_direction = current_player.make_build(self, new_row, new_col)
+                current_player.build(self.board, worker_symbol, build_direction)
 
-            if self._score == 'on':
-                print(f"{worker_symbol},{move_direction},{build_direction} ({height_score}, {center_score}, {distance_score})")
-            else:
-                print(f"{worker_symbol},{move_direction},{build_direction}")
-
-
-            self.turn_count += 1
-            self.next_turn()
+                if self._score == 'on':
+                    print(f"{worker_symbol},{move_direction},{build_direction} ({height_score}, {center_score}, {distance_score})")
+                else:
+                    print(f"{worker_symbol},{move_direction},{build_direction}")
+                self.turn_count += 1 
+                self.save_state()
+                self.next_turn()
 
     def check_win_condition(self):
         for row in range(self.board.size):
@@ -119,11 +124,16 @@ class GameManager:
         memento = self.history_manager.undo()
         if memento:
             self.restore_state(memento)
+            self.turn_count = memento.turn_count
+            self.current_player_index = memento.current_player_index
 
     def redo_move(self):
         memento = self.history_manager.redo()
         if memento:
             self.restore_state(memento)
+            self.turn_count = memento.turn_count
+            self.current_player_index = memento.current_player_index
+
 
 
 class HistoryManager:
@@ -135,16 +145,29 @@ class HistoryManager:
         self.history.append(memento)
         self.future.clear() 
 
+    def restore_state(self, memento):
+        self.board, self.turn_count, self.current_player_index = memento.get_state()
+
     def undo(self):
-        if self.history:
-            memento = self.history.pop()
-            self.future.append(memento)
-            return memento
+        if len(self.history) >= 2:
+            end_of_turn_state = self.history.pop()
+            self.future.append(end_of_turn_state)
+
+            start_of_turn_state = self.history.pop()
+            self.future.append(start_of_turn_state)
+            
+            self.restore_state(start_of_turn_state)
+            return start_of_turn_state
         return None
 
     def redo(self):
-        if self.future:
-            memento = self.future.pop()
-            self.history.append(memento)
-            return memento
+        if len(self.future) >= 2:
+            start_of_turn_state = self.future.pop()
+            self.history.append(start_of_turn_state)
+            self.restore_state(start_of_turn_state)
+
+            end_of_turn_state = self.future.pop()
+            self.history.append(end_of_turn_state)
+
+            return end_of_turn_state
         return None

@@ -36,13 +36,12 @@ def main():
         player2 = Player("blue", ["Y", "Z"], blue_strategy)
         players = [player1, player2]
 
-        # Initialize GameManager with undo/redo and score display settings
         game_manager = GameManager(board, players, undo_redo=args.undo_redo, score_display=args.score_display)
 
         game_manager.preset_board()
         game_manager.play()
         play_again = input("Play again?\n")
-        
+
         if play_again.lower() != 'yes':
             break
 

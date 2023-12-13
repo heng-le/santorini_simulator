@@ -6,3 +6,6 @@ class Memento:
 
     def get_state(self):
         return self.board_state, self.turn_count, self.current_player_index
+    
+    def __str__(self):
+        return f"{self.turn_count}, {self.current_player_index}"
