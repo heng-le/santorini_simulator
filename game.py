@@ -115,7 +115,8 @@ class GameManager:
 
     def create_game_snapshot(self):
         board_copy = copy.deepcopy(self.board)
-        return board_copy, self.turn_count, self.current_player_index
+        players_copy = copy.deepcopy(self.players)
+        return board_copy, self.turn_count, self.current_player_index, players_copy
 
     def restore_state(self, memento):
         self.board, self.turn_count, self.current_player_index = memento.get_state()
@@ -123,16 +124,18 @@ class GameManager:
     def undo_move(self):
         memento = self.history_manager.undo()
         if memento:
-            self.restore_state(memento)
+            self.board = memento.board_state
             self.turn_count = memento.turn_count
             self.current_player_index = memento.current_player_index
+            self.players = memento.players
 
     def redo_move(self):
         memento = self.history_manager.redo()
         if memento:
-            self.restore_state(memento)
+            self.board = memento.board_state
             self.turn_count = memento.turn_count
             self.current_player_index = memento.current_player_index
+            self.players = memento.players
 
 
 
@@ -146,7 +149,7 @@ class HistoryManager:
         self.future.clear() 
 
     def restore_state(self, memento):
-        self.board, self.turn_count, self.current_player_index = memento.get_state()
+        self.board, self.turn_count, self.current_player_index, self.players = memento.get_state()
 
     def undo(self):
         if len(self.history) >= 2:
@@ -164,10 +167,10 @@ class HistoryManager:
         if len(self.future) >= 2:
             start_of_turn_state = self.future.pop()
             self.history.append(start_of_turn_state)
-            self.restore_state(start_of_turn_state)
 
             end_of_turn_state = self.future.pop()
             self.history.append(end_of_turn_state)
+            self.restore_state(end_of_turn_state)
 
             return end_of_turn_state
         return None
