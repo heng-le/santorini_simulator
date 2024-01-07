@@ -74,14 +74,12 @@ class GameManager:
                 self.next_turn()
 
     def check_win_condition(self):
-        for row in range(self.board.size):
-            for col in range(self.board.size):
-                cell = self.board.get_cell(row, col)
-                if cell.level == 3 and cell.occupant is not None:
-                    for player in self.players:
-                        if cell.occupant in player.get_workers():
-                            return player.name 
-        return None 
+        for cell in self.board: 
+            if cell.level == 3 and cell.occupant is not None:
+                for player in self.players:
+                    if cell.occupant in player.get_workers():
+                        return player.name
+        return None
     
     def check_no_valid_moves(self, player):
         for worker_symbol in player.get_workers().keys():
@@ -136,7 +134,6 @@ class GameManager:
             self.turn_count = memento.turn_count
             self.current_player_index = memento.current_player_index
             self.players = memento.players
-
 
 
 class HistoryManager:
